@@ -1,0 +1,98 @@
+name: GART GALLERY - CI/CD
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+
+  build-and-test:
+    name: Build y pruebas unitarias
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Construir aplicación
+        run: npm run build
+
+      - name: Ejecutar pruebas unitarias
+        run: npm test
+
+
+  integration:
+    name: Pruebas de integración
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar pruebas de integración
+        run: npm run test:integration
+
+
+  lighthouse:
+    name: Auditoría SEO y rendimiento
+    needs: integration
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Construir aplicación
+        run: npm run build
+
+      - name: Ejecutar auditoría Lighthouse
+        run: npm run lighthouse
+
+  deploy:
+    name: Despliegue a producción
+    needs: lighthouse
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Desplegar nueva versión
+        run: echo "Desplegando GART GALLERY..."
+
+      - name: Validar nueva versión
+        run: echo "Validando aplicación desplegada..."
+
+      - name: Activar nueva versión
+        run: echo "Nueva versión de GART GALLERY activa"    
+  
