@@ -41,8 +41,41 @@ app.use('/api/cart', proxy('http://localhost:3004', '/api/cart'));
 app.use('/api/content', proxy('http://localhost:3005', '/api/content'));
 app.use('/api/artists', proxy('http://localhost:3005', '/api/artists'));
 
-app.get('/health', (_req, res) => {
-  res.json({ service: 'api-gateway', status: 'ok' });
+const serviceHealthUrls = {
+  gallery: 'http://localhost:3001/docs',
+  works: 'http://localhost:3002/docs',
+  auth: 'http://localhost:3003/docs',
+  purchase: 'http://localhost:3004/docs',
+  content: 'http://localhost:3005/docs'
+};
+
+async function checkService(url) {
+  try {
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(1500)
+    });
+
+    return response.ok ? 'online' : 'offline';
+  } catch (error) {
+    return 'offline';
+  }
+}
+
+app.get('/health', async (req, res) => {
+  const services = {};
+
+  for (const [name, url] of Object.entries(serviceHealthUrls)) {
+    services[name] = await checkService(url);
+  }
+
+  const allOnline = Object.values(services).every(
+    status => status === 'online'
+  );
+
+  res.status(allOnline ? 200 : 503).json({
+    gateway: 'online',
+    services
+  });
 });
 
 app.listen(PORT, () => {
