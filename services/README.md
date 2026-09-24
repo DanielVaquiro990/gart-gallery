@@ -64,3 +64,22 @@ python services\auth-service\app.py
 ```
 
 The gateway can then route to the service on its configured port.
+
+# API Gateway y Proxy Reverso
+
+El proyecto utiliza un API Gateway en el puerto 3000 que funciona
+como proxy reverso para los microservicios.
+
+- Gallery Service: puerto 3001
+- Works Service: puerto 3002
+- Auth Service: puerto 3003
+- Purchase Service: puerto 3004
+- Content Service: puerto 3005
+
+Ejemplo:
+
+GET http://localhost:3000/api/galleries
+
+El API Gateway redirige internamente la petición hacia:
+
+http://localhost:3001/api/galleries
